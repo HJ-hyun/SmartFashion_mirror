@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>MagicMirror²</title>
+	<meta name="google" content="notranslate" />
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="format-detection" content="telephone=no">
+	<meta name="mobile-web-app-capable" content="yes">
+	
+	<link rel="icon" href="data:;base64,iVBORw0KGgo=">
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+	<link rel="stylesheet" type="text/css" href="fonts/roboto.css">
+	<!-- custom.css is loaded by the loader.js to make sure it's loaded after the module css files. -->
+
+	<script type="text/javascript">
+		var version = "#VERSION#";
+	</script>
+</head>
+<body>
+	<div class="region fullscreen below"><div class="container"></div></div>
+	<div class="region top bar">
+		<div class="container"></div>
+		<div class="region top left"><div class="container"></div></div>
+		<div class="region top center"><div class="container"></div></div>
+		<div class="region top right"><div class="container"></div></div>
+	</div>
+	<div class="region upper third"><div class="container"></div></div>
+	<div class="region middle center"><div class="container"></div></div>
+	<div class="region lower third"><div class="container"><br/></div></div>
+	<div class="region bottom bar">
+		<div class="container"></div>
+		<div class="region bottom left"><div class="container"></div></div>
+		<div class="region bottom center"><div class="container"></div></div>
+		<div class="region bottom right"><div class="container"></div></div>
+	</div>
+	<div class="region fullscreen above"><div class="container"></div></div>
+	<script type="text/javascript" src="socket.io/socket.io.js"></script>
+	<script type="text/javascript" src="vendor/node_modules/nunjucks/browser/nunjucks.min.js"></script>
+	<script type="text/javascript" src="js/defaults.js"></script>
+	<script type="text/javascript" src="#CONFIG_FILE#"></script>
+	<script type="text/javascript" src="vendor/vendor.js"></script>
+	<script type="text/javascript" src="modules/default/defaultmodules.js"></script>
+	<script type="text/javascript" src="js/logger.js"></script>
+	<script type="text/javascript" src="translations/translations.js"></script>
+	<script type="text/javascript" src="js/translator.js"></script>
+	<script type="text/javascript" src="js/class.js"></script>
+	<script type="text/javascript" src="js/module.js"></script>
+	<script type="text/javascript" src="js/loader.js"></script>
+	<script type="text/javascript" src="js/socketclient.js"></script>
+	<script type="text/javascript" src="js/main.js"></script>
+	
+	<p class="region middle upper">
+		<img id="top" width="300" height="300">
+	</p>
+
+	<p class="region middle lower">
+		<img id="bottom" width="300" height="300">
+	</p>
+	
+	<button class="button1" onclick="next_img('test')">Next</button>
+	<button class="button2" onclick="before_img('test')">Back</button>
+	<button class="button3" onclick="next_img('bottom')">Next</button>
+	<button class="button4" onclick="before_img('bottom')">Back</button>
+	<button class="button_top" onclick="show_img('test')">top closet</button>
+	<button class="button_bottom" onclick="show_img('bottom')">bottom closet</button>
+	<script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-app.js"></script>
+	<!-- TOD: Add SDKs for Firebase products that you want to use
+		https://firebase.google.com/docs/web/setup#available-libraries -->
+	<script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-analytics.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/7.19.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-firestore.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-storage.js"></script>
+
+	<script>
+	// Your web app's Firebase configuration
+	var firebaseConfig = {
+		apiKey: "AIzaSyCpRFJqJ5FrJkvO_KA8olWaW3g571MhYV8",
+		authDomain: "webos-project-4c3a6.firebaseapp.com",
+		databaseURL: "https://webos-project-4c3a6.firebaseio.com",
+		projectId: "webos-project-4c3a6",
+		storageBucket: "webos-project-4c3a6.appspot.com",
+		messagingSenderId: "493114989291",
+		appId: "1:493114989291:web:06da583c0c4ba39621fcae",
+		measurementId: "G-0712VN9XVN"
+	};
+	// Initialize Firebase
+	firebase.initializeApp(firebaseConfig);
+	var db = firebase.firestore();
+	firebase.analytics();
+	var storage = firebase.storage();
+	var storageRef = storage.ref();
+
+	</script>
+	<script>
+		function show_img(img_type){
+			if (img_type=='test'){
+				var test_list = [];
+				var test_count = 0;
+				db.collection("test_img").get().then((querySnapshot) => {
+					querySnapshot.forEach((doc) => {
+						console.log(`${doc.id} => ${doc.data().name}`);
+						test_list.push(doc.data().name);
+					});
+					get_img(test_list[0],"test");
+
+				});
+			}
+			else if (img_type=='bottom'){
+				var bottom_list = [];
+				var bottom_count = 0;
+				db.collection("bottom_img").get().then((querySnapshot) => {
+					querySnapshot.forEach((doc) => {
+						console.log(`${doc.id} => ${doc.data().name}`);
+						bottom_list.push(doc.data().name);
+					});
+					get_img(bottom_list[0],"bottom");
+					//console.log(bottom_list);
+				});
+			}
+		}
+
+		function get_img(img_name, img_type){
+			var path = "";
+			var id = "";
+			if (img_type=="test"){
+				path = "test_img";
+				id = "top";
+			}
+			else if (img_type=="bottom"){
+				path = "bottom_img";
+				id = "bottom";
+			}
+			var imagesRef = storageRef.child(`${path}`);
+			storageRef.child(`${path}/` + img_name).getDownloadURL().then(function(url) {
+				// Or inserted into an <img> element:
+				var img = document.getElementById(`${id}`);
+				img.src = url;
+				}).catch(function(error) {
+				// Handle any errors
+					switch (error.code) {
+						case 'storage/object-not-found':
+						// File doesn't exist
+						break;
+						case 'storage/unauthorized':
+						// User doesn't have permission to access the object
+						console.log("No authorized!!!!!!");
+						break;
+						case 'storage/canceled':
+						// User canceled the upload
+						break;
+						case 'storage/unknown':
+						// Unknown error occurred, inspect the server response
+						break;
+					}
+				});
+		}
+
+		function next_img(img_type){
+			//console.log(bottom_list);
+			if (img_type == 'test'){
+				console.log(test_list)
+				if(test_count==test_list.length-1){
+					test_count = 0;
+				}
+				else{
+					test_count ++;
+				}
+				get_img(test_list[test_count], 'test');
+			}
+			else if (img_type == 'bottom'){
+				console.log(bottom_list)
+				if(bottom_count==bottom_list.length-1){
+					bottom_count = 0;
+				}
+				else{
+					bottom_count ++;
+				}
+				get_img(bottom_list[bottom_count], 'bottom');
+			}
+		}
+		
+		function before_img(img_type){
+			if (img_type == 'test'){
+				console.log(test_list)
+				if(test_count==0){
+					test_count = test_list.length-1;
+				}
+				else{
+					test_count --;
+				}
+				get_img(test_list[test_count], 'test');
+			}
+			else if (img_type == 'bottom'){
+				console.log(bottom_list)
+				if(bottom_count==0){
+					bottom_count = bottom_list.length-1;
+				}
+				else{
+					bottom_count --;
+				}
+				get_img(bottom_list[bottom_count], 'bottom');
+			}
+		}
+	</script>
+</body>
+</html>
